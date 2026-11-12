@@ -6,6 +6,7 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE)
 from new_recognition import NEW_REC
 from new_dialogues import NEW_DIA
+from new_tone_samples import NEW_TONE_DIA
 
 TAXONOMY = ["喜悦","悲伤","愤怒","恐惧","焦虑","惊讶","厌恶","平静","委屈","孤独","愧疚","期待","感动","疲惫"]
 JSONL = os.path.join(BASE, "情感AI混合训练集.jsonl")
@@ -33,7 +34,7 @@ for text, emo, inten, trig in NEW_REC:
     assert emo in TAXONOMY and 1 <= inten <= 5, (text, emo, inten)
     out = json.dumps({"emotion": emo, "intensity": inten, "trigger": trig}, ensure_ascii=False)
     new_samples.append([{"role":"system","content":REC_SYS},{"role":"user","content":text},{"role":"assistant","content":out}])
-for turns in NEW_DIA:
+for turns in NEW_DIA + NEW_TONE_DIA:
     assert turns[0][0]=="user" and turns[-1][0]=="assistant"
     for i in range(len(turns)-1):
         assert turns[i][0]!=turns[i+1][0]
@@ -128,6 +129,7 @@ readme=f"""# 情感AI混合训练集 · 数据说明
 - **回应原则**：先接纳并确认感受 → 再温和陪伴/启发/引导；不说教、不评判、不否定感受、不急于给方案；尊重对方节奏。
 - **场景覆盖**：职场（裁员/背锅/骚扰/产后边缘化）、失恋/异地恋、学业/考试、容貌焦虑、网暴、失眠、孤独/空巢、亲子/育儿分歧、催生/催婚、经济压力、中年危机、哀伤（亲人/宠物离世）、照护耗竭、离婚重建、迷茫，以及**积极情绪分享**（上岸/求婚/康复/创业好转/小确幸等）。
 - **安全示范**：包含心理危机、职场骚扰边界、照护者耗竭、亲人确诊等场景的**安全范式回应**——表达关心与在意、鼓励联系信任的人与专业心理/医疗/法律支持、不做诊断、不评判、不鼓励任何伤害行为、不受害者有罪论。可用于训练模型的安全边界。
+- **语气词/口语化风格**：新增一批轻松日常与积极场景样本，示范自然的语气词应答（嗯/嗯呢/嗯呐/好滴/好哒/好嘞/谢谢啦等）与句尾语气词（咯/啦/呐/嘿/哦/呀/呗/哈等），让陪伴语气更软、更有人味；严肃/危机场景仍保持稳重，不用俏皮语气词。
 
 ## 六、使用建议
 - 兼容 LLaMA-Factory、ms-swift、Axolotl、OpenAI fine-tuning 等主流 SFT 流程（messages 格式）。
@@ -139,8 +141,8 @@ readme=f"""# 情感AI混合训练集 · 数据说明
 - 危机/安全场景回应中未写死具体热线号码，以避免信息过时；落地时可按部署地区补充官方心理援助渠道。
 
 ## 八、复现与扩充
-- **复现**：先运行 `gen_emotion_data.py` 生成首批 80 条，再运行 `merge_expand.py` 合并 `new_recognition.py` / `new_dialogues.py` 中的新增样本，得到本数据集（脚本输出的文档名为 `数据说明.md`，内容即本 README）。
-- **扩充**：在 `new_recognition.py` / `new_dialogues.py` 中按相同结构追加样本，重跑 `merge_expand.py` 即可（自动去重、打乱、重算分布）。
+- **复现**：先运行 `gen_emotion_data.py` 生成首批 80 条，再运行 `merge_expand.py` 合并 `new_recognition.py` / `new_dialogues.py` / `new_tone_samples.py` 中的新增样本，得到本数据集（脚本输出的文档名为 `数据说明.md`，内容即本 README）。
+- **扩充**：在 `new_recognition.py` / `new_dialogues.py` / `new_tone_samples.py` 中按相同结构追加样本，重跑 `merge_expand.py` 即可（自动去重、打乱、重算分布）。
 """
 md5_readme = safe_write(README, readme)
 
