@@ -17,7 +17,7 @@ TAXONOMY = ["喜悦","悲伤","愤怒","恐惧","焦虑","惊讶","厌恶","平�
 THEMES = list(DIA_THEMES.keys())
 SEED = 20261113
 rng = random.Random(SEED)
-OUT = os.path.join(BASE, "dataset")
+OUT = os.environ.get("DATASET_OUT") or (os.path.dirname(BASE) if os.path.basename(BASE)=="scripts" else os.path.join(BASE, "dataset"))
 REC_TOTAL, SINGLE_TOTAL, MULTI_TOTAL = 2500, 1500, 750
 TONE_GEN = {"情绪场合适配":50, "克制与严肃":30, "日常软萌":32}
 
