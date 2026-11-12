@@ -153,6 +153,19 @@ deficit=5000-cur
 if deficit>0:
     fill_dialogue(SINGLE_TOTAL+deficit, single_by_theme, False)
 
+# ---------- 4) 手写精选（逐条手写，独立分区，全局去重）----------
+import handwritten_batch1 as hw1
+hw_rec=[];hw_dia=[];hw_tone=[]
+for t,e,i,g in hw1.HAND_REC:
+    if t not in rec_seen:
+        rec_seen.add(t);hw_rec.append(rec_msgs(t,e,i,g))
+for turns in hw1.HAND_DIA:
+    m=dia_msgs(turns);k=sig(m)
+    if k not in dseen: dseen.add(k);hw_dia.append(m)
+for turns in hw1.HAND_TONE:
+    m=dia_msgs(turns);k=sig(m)
+    if k not in dseen: dseen.add(k);hw_tone.append(m)
+
 # ---------- 写文件 ----------
 def write_jsonl(relpath,msgs_list):
     p=os.path.join(OUT,relpath); os.makedirs(os.path.dirname(p),exist_ok=True)
@@ -174,6 +187,10 @@ tone_files=[("近音词对照",tone_contrastive),("精选语气词样本",tone_s
 for name,lst in tone_files:
     n=write_jsonl(f"data/04_语气词专项/{name}.jsonl",lst); total+=n
     manifest.append({"path":f"data/04_语气词专项/{name}.jsonl","类别":"语气词专项","子类":name,"条数":n})
+hw_files=[("情绪识别",hw_rec),("共情对话",hw_dia),("语气词",hw_tone)]
+for name,lst in hw_files:
+    n=write_jsonl(f"data/05_手写精选/{name}.jsonl",lst); total+=n
+    manifest.append({"path":f"data/05_手写精选/{name}.jsonl","类别":"手写精选","子类":name,"条数":n,"来源":"逐条手写"})
 
 # ---------- 索引 ----------
 rec_n=sum(len(v) for v in rec_by_emo.values()); s_n=sum(len(v) for v in single_by_theme.values()); m_n=sum(len(v) for v in multi_by_theme.values())
@@ -184,6 +201,8 @@ rec_items=[m for m in manifest if m["类别"]=="情绪识别"]
 s_items=[m for m in manifest if m["类别"]=="共情对话·单轮"]
 m_items=[m for m in manifest if m["类别"]=="共情对话·多轮"]
 t_items=[m for m in manifest if m["类别"]=="语气词专项"]
+hw_items=[m for m in manifest if m["类别"]=="手写精选"]
+hw_n=len(hw_rec)+len(hw_dia)+len(hw_tone)
 readme=f"""# 情感AI混合训练集 · 总索引
 
 面向「情感AI大模型」的 SFT 训练集，**总量 {total} 条**，按任务与场景分门别类存放于 `data/`，
@@ -195,7 +214,8 @@ data/
 ├── 01_情绪识别/          # 文本→情绪JSON标注，按14类情绪分文件（{rec_n}条）
 ├── 02_共情对话_单轮/     # 单轮共情回应，按12主题分文件（{s_n}条）
 ├── 03_共情对话_多轮/     # 多轮共情陪伴，按12主题分文件（{m_n}条）
-└── 04_语气词专项/        # 语气词近音辨析/情绪适配/克制/软萌（{tone_n}条）
+├── 04_语气词专项/        # 语气词近音辨析/情绪适配/克制/软萌（{tone_n}条）
+└── 05_手写精选/          # 逐条手写精选：情绪识别/共情对话/语气词（{hw_n}条）
 docs/                     # 语气词使用规范、数据说明
 scripts/                  # 生成与合并脚本（可复现/继续扩充）
 manifest.json             # 机器可读索引（文件→类别/条数）
@@ -208,6 +228,7 @@ manifest.json             # 机器可读索引（文件→类别/条数）
 | 共情对话·单轮 | {s_n} |
 | 共情对话·多轮 | {m_n} |
 | 语气词专项 | {tone_n} |
+| 手写精选（逐条手写） | {hw_n} |
 | **合计** | **{total}** |
 
 ## 三、情绪识别（{rec_n}）
@@ -232,20 +253,28 @@ manifest.json             # 机器可读索引（文件→类别/条数）
 |---|---|---|
 {tbl(t_items,"子类")}
 
-## 七、数据构成与质量说明
-- **手工精选核心**：首批及历次手工编写样本（情绪识别152、共情对话100、语气词56）+ 语气词近音对照{len(tone_contrastive)}条，质量基准。
-- **程序化扩写**：其余由富模板库（多框架×大槽位）组合扩写，固定随机种子（seed={SEED}）生成并去重，用于扩充规模与场景覆盖。
+## 七、手写精选（{hw_n}，逐条手写）
+独立分区 `data/05_手写精选/`，**全部逐条手写、非模板生成**，质量优先，可持续一批批累积。
+| 子类 | 条数 | 文件 |
+|---|---|---|
+{tbl(hw_items,"子类")}
+
+## 八、数据构成与质量说明
+- **手写**：`05_手写精选/` 全部逐条手写；另首批手工核心（情绪识别152、共情对话100、语气词56）与语气词近音对照{len(tone_contrastive)}条分布于主分区，均为手写。
+- **程序化扩写**：主分区其余样本由富模板库（多框架×大槽位）组合扩写，固定随机种子（seed={SEED}）生成并去重，用于扩充规模与场景覆盖。
+- 若只想要手写质量，可仅加载 `05_手写精选/` 及主分区手写核心；模板扩写部分可按需取用或逐步用手写替换。
 - 两类任务以不同 system 提示词区分；共情 system 已注入语气词总原则。
 - 建议训练前人工抽检共情质量与安全回应；可按需对某类别加权采样或继续扩充。
 
-## 八、复现与扩充
-- 复现：运行 `scripts/build_dataset.py`（依赖 `scripts/` 下模板库与精选样本模块）。
-- 扩充：在对应模板库（banks_recognition / banks_dialogue / tone_bank）追加框架或槽位，重跑即可；自动去重、分类、重建索引。
+## 九、复现与扩充
+- 复现：运行 `scripts/build_dataset.py`（依赖 `scripts/` 下模板库与手写样本模块）。
+- 手写扩充：在 `handwritten_batchN.py` 逐条追加 HAND_DIA/HAND_TONE/HAND_REC，重跑即并入「手写精选」区（自动去重）。
+- 模板扩充：在 banks_recognition / banks_dialogue / tone_bank 追加框架或槽位，重跑即可；自动去重、分类、重建索引。
 """
 tmp=os.path.join(OUT,"README.md.tmp"); open(tmp,"w",encoding="utf-8").write(readme); os.replace(tmp,os.path.join(OUT,"README.md"))
 json.dump({"总量":total,"seed":SEED,"文件":manifest},open(os.path.join(OUT,"manifest.json"),"w",encoding="utf-8"),ensure_ascii=False,indent=2)
 
-print("总量:",total,"| 识别:",rec_n,"| 单轮:",s_n,"| 多轮:",m_n,"| 语气词:",tone_n)
+print("总量:",total,"| 识别:",rec_n,"| 单轮:",s_n,"| 多轮:",m_n,"| 语气词:",tone_n,"| 手写精选:",hw_n)
 print("情绪识别每类:",{e:len(rec_by_emo[e]) for e in TAXONOMY})
 print("单轮主题:",{t:len(single_by_theme[t]) for t in THEMES})
 print("多轮主题:",{t:len(multi_by_theme[t]) for t in THEMES})
