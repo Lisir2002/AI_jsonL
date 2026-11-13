@@ -1,5 +1,5 @@
 {
-  "total": 1008,
+  "total": 1205,
   "categories": {
     "开篇黄金三章": {
       "file": "data/01_开篇黄金三章.jsonl",
@@ -7,7 +7,7 @@
     },
     "续写": {
       "file": "data/02_续写.jsonl",
-      "count": 118
+      "count": 157
     },
     "爽点打脸": {
       "file": "data/03_爽点打脸.jsonl",
@@ -15,39 +15,39 @@
     },
     "人设": {
       "file": "data/04_人设.jsonl",
-      "count": 124
+      "count": 137
     },
     "金手指系统": {
       "file": "data/05_金手指系统.jsonl",
-      "count": 123
+      "count": 137
     },
     "钩子断章": {
       "file": "data/06_钩子断章.jsonl",
-      "count": 106
+      "count": 145
     },
     "大纲设定": {
       "file": "data/07_大纲设定.jsonl",
-      "count": 66
+      "count": 108
     },
     "标题简介": {
       "file": "data/08_标题简介.jsonl",
-      "count": 67
+      "count": 92
     },
     "技法诊断改写": {
       "file": "data/09_技法诊断改写.jsonl",
-      "count": 67
+      "count": 92
     }
   },
   "genres": {
-    "玄幻": 158,
-    "仙侠": 92,
-    "都市": 149,
+    "玄幻": 200,
+    "仙侠": 101,
+    "都市": 190,
     "系统流": 194,
     "重生": 23,
     "言情": 91,
-    "历史": 70,
+    "历史": 95,
     "科幻": 73,
-    "悬疑": 98,
+    "悬疑": 178,
     "游戏": 60
   },
   "format": "messages(system/user/assistant)",
