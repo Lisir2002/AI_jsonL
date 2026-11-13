@@ -16,10 +16,19 @@ SYS = ("你是一位资深网络小说创作助手，精通玄幻、仙侠、都
 
 CATS = ["开篇黄金三章","续写","爽点打脸","人设","金手指系统","钩子断章","大纲设定","标题简介","技法诊断改写"]
 
+def batch_files():
+    import glob
+    fs = glob.glob(os.path.join(HERE, "novel_batch*.py"))
+    def num(p):
+        m = re.search(r"novel_batch(\d+)\.py$", p)
+        return int(m.group(1)) if m else 0
+    return sorted(fs, key=num)
+
 def load_all():
     items = []
-    for n in range(1, 6):
-        m = importlib.import_module(f"novel_batch{n}")
+    for p in batch_files():
+        name = os.path.splitext(os.path.basename(p))[0]
+        m = importlib.import_module(name)
         for it in m.NOVEL_BATCH:
             items.append(it)
     return items
@@ -94,8 +103,8 @@ def main():
         f.write("\n".join(lines)+"\n")
     # 拷贝源脚本
     import shutil
-    for n in range(1,6):
-        shutil.copy(os.path.join(HERE,f"novel_batch{n}.py"), os.path.join(OUT,"scripts",f"novel_batch{n}.py"))
+    for p in batch_files():
+        shutil.copy(p, os.path.join(OUT, "scripts", os.path.basename(p)))
     shutil.copy(os.path.join(HERE,"build_novel.py"), os.path.join(OUT,"scripts","build_novel.py"))
     print("输出目录:", OUT)
     print("文件数:", sum(len(fs) for _,_,fs in os.walk(OUT)))
